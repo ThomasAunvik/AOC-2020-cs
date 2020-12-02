@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 string[] lines = await File.ReadAllLinesAsync("passwords.txt");
+
 List<PasswordValidator> passwords = lines.Select(x => {
     var result = x.Split(':');
     var valid = result[0].Split(' ');
@@ -20,7 +21,6 @@ ValidPasswordsTask1(passwords);
 ValidPasswordsTask2(passwords);
 
 static void ValidPasswordsTask1(List<PasswordValidator> passwords) {
-
     var valid = passwords.FindAll(x => {
         int letterCount = x.password.Count(passChar => passChar == x.letter);
         return letterCount >= x.min && letterCount <= x.max;
@@ -31,11 +31,12 @@ static void ValidPasswordsTask1(List<PasswordValidator> passwords) {
 
 static void ValidPasswordsTask2(List<PasswordValidator> passwords) {
     var valid = passwords.FindAll(x => {
-        return x.password[x.min-1] == x.letter && x.password[x.max-1] != x.letter;
+        bool firstValid = x.password[x.min-1] == x.letter;
+        bool secondValid = x.password[x.max-1] == x.letter;
+        return (firstValid || secondValid) && (firstValid != secondValid);
     });
 
     Console.WriteLine("Total Valid Passwords: {0}", valid.Count);
-    Console.WriteLine("Vallids: {0}", string.Join("", valid.Select(x => x.password + " " + x.min + "-" + x.max + " " + x.letter + "\n")));
 }
 
 class PasswordValidator {
