@@ -31,9 +31,7 @@ static void ValidPasswordsTask1(List<PasswordValidator> passwords) {
 
 static void ValidPasswordsTask2(List<PasswordValidator> passwords) {
     var valid = passwords.FindAll(x => {
-        bool firstValid = x.password[x.min-1] == x.letter;
-        bool secondValid = x.password[x.max-1] == x.letter;
-        return (firstValid || secondValid) && (firstValid != secondValid);
+        return (x.password[x.min-1] == x.letter) != (x.password[x.max-1] == x.letter);
     });
 
     Console.WriteLine("Total Valid Passwords: {0}", valid.Count);
