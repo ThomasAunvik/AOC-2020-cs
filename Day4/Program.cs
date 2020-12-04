@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 string[] lines = await File.ReadAllLinesAsync("passports.txt");
 
 List<Passport> passports = new List<Passport>();
 Dictionary<string, string> passportValues = new Dictionary<string, string>();
 
-for(int passportIndex = 0; passportIndex < lines.Length; passportIndex++){
-    string line = lines[passportIndex];
+for(int passportIndex = 0; passportIndex < lines.Length+1; passportIndex++){
+    string line = passportIndex >= lines.Length ? "" : lines[passportIndex];
     if(string.IsNullOrWhiteSpace(line)){
         if(passportValues.Count <= 0) continue;
         
@@ -49,6 +50,8 @@ for(int passportIndex = 0; passportIndex < lines.Length; passportIndex++){
     }
 }
 
+List<Passport> passportstens = passports.Where(x => x.passportId.ToString().Length == 10).ToList();
+Console.WriteLine("Passports with 10 numbers: {0}", passportstens.Count);
 Console.WriteLine("Valid Passports: {0}", passports.Count(x => x.IsValid));
 
 struct Passport {
@@ -67,10 +70,28 @@ struct Passport {
     public long passportId { get; set; }
     public long? countryId { get; set; }
     public bool IsValid { get { 
-        return birthYear != 0 && issueYear != 0 && expirationYear != 0 && 
-                !string.IsNullOrEmpty(height) &&
-                !string.IsNullOrEmpty(hairColor) &&
-                !string.IsNullOrEmpty(eyeColor) &&
-                passportId != 0;
+        int inchHeight = 0;
+        int cmHeight = 0;
+        if(!string.IsNullOrEmpty(height)){
+            if(height.Contains("cm")) int.TryParse(height.Substring(0, height.Length-2), out cmHeight);
+            else if(height.Contains("in")) int.TryParse(height.Substring(0, height.Length-2), out inchHeight);
+        }
+
+        bool hairValid = string.IsNullOrEmpty(hairColor) ? false : 
+            hairColor[0] == '#' && hairColor.Substring(1).All(x => "0123456789abcdef".Contains(x)) && hairColor.Length == 7
+        ;
+
+        string[] eyeColors = new string[]{"amb", "blu", "brn", "gry", "grn", "hzl", "oth"};
+
+        bool birthYearValid = birthYear >= 1920 && birthYear <= 2020;
+        bool issueYearValid = issueYear >= 2010 && issueYear <= 2020;
+        bool expiryYearValid = expirationYear >= 2020 && expirationYear <= 2030;
+        bool heightValid = 
+                (!string.IsNullOrEmpty(height) ? (height.Contains("cm") ? cmHeight >= 150 && cmHeight <= 193 : true) : false) &&
+                (!string.IsNullOrEmpty(height) ? (height.Contains("in") ? inchHeight >= 59 && inchHeight <= 76 : true) : false);
+        bool eyeColorsValid = eyeColors.Contains(eyeColor);
+        bool passportValid = passportId.ToString("D9").Length == 9;
+
+        return birthYearValid && issueYearValid && heightValid && eyeColorsValid && passportValid && hairValid && expiryYearValid;
     } }
 }
